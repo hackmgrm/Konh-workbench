@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import "./app.css";
     import Home from "./views/Home.svelte";
     import Tasks from "./views/Tasks.svelte";
@@ -11,6 +12,7 @@
     import CountdownView from "./views/CountdownView.svelte";
     import HabitsView from "./views/HabitsView.svelte";
     import FlowMode from "./views/FlowMode.svelte";
+    import SunsetShutdown from "./views/SunsetShutdown.svelte";
     import GanttView from "./views/GanttView.svelte";
     import MemoryView from "./views/MemoryView.svelte";
     import NewsView from "./views/NewsView.svelte";
@@ -23,6 +25,7 @@
     import { timerState, pomodoro } from "./lib/timer";
     import { fmtClock } from "./lib/time";
     import type { NoiseEngine } from "./lib/noise";
+    import { getTodayString, shouldPromptSunsetShutdown } from "./lib/sunsetShutdown";
 
     export let noise: NoiseEngine;
     export let onToggleWidget: () => void = () => {};
@@ -112,8 +115,29 @@
     }
 
     let flowOpen = false;
+    let sunsetOpen = false;
     let diaryDate = "";
     let noiseOn = false;
+
+    function openSunset() {
+        sunsetOpen = true;
+    }
+
+    function closeSunset() {
+        sunsetOpen = false;
+        try { window.localStorage.setItem("tongyun_last_sunset_date", getTodayString()); } catch { /* ignore */ }
+    }
+
+    onMount(() => {
+        const checkSunset = () => {
+            let last: string | null = null;
+            try { last = window.localStorage.getItem("tongyun_last_sunset_date"); } catch { /* ignore */ }
+            if (shouldPromptSunsetShutdown(new Date(), last)) sunsetOpen = true;
+        };
+        checkSunset();
+        const timer = window.setInterval(checkSunset, 60_000);
+        return () => window.clearInterval(timer);
+    });
 
     function bumpMin(delta: number) {
         if (ts.running) return;
@@ -271,6 +295,9 @@
 {#if flowOpen}
     <FlowMode onExit={() => (flowOpen = false)} />
 {/if}
+{#if sunsetOpen}
+    <SunsetShutdown onClose={closeSunset} />
+{/if}
 
 <div class="ty-root" class:dark={$settings.dark}>
     <aside class="ty-side">
@@ -375,6 +402,11 @@
             <button class="nav-item" on:click={openSearch}>
                 <span class="ic">{@html ICONS.search}</span>
                 <span>搜索</span>
+            </button>
+
+            <button class="nav-item" on:click={openSunset}>
+                <span class="ic">🌅</span>
+                <span>日落关机</span>
             </button>
 
             <button class="nav-item" on:click={onToggleWidget}>
