@@ -1,0 +1,18 @@
+{
+  "name": "Konh-workbench",
+  "author": "Solomon",
+  "url": "https://github.com/hackmgrm/Konh-workbench",
+  "version": "1.0.0",
+  "minAppVersion": "3.0.0",
+  "backends": ["all"],
+  "frontends": ["all"],
+  "displayName": {
+    "default": "Konh Workbench",
+    "zh_CN": "空核工作台"
+  },
+  "description": {
+    "default": "Konh Workbench for SiYuan: tasks, quadrants, calendar, diary, pomodoro, notes",
+    "zh_CN": "空核工作台：待办、四象限、日历、翻页日记、番茄钟、白噪音、便签墙"
+  },
+  "keywords": ["task", "pomodoro", "diary", "quadrant"]
+}
