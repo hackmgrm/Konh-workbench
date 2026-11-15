@@ -3,7 +3,7 @@
     import { tasks, categories, save, uid } from "../lib/store";
     import { QUADRANTS, quadOf } from "../lib/types";
     import type { Task } from "../lib/types";
-    import { daysUntil } from "../lib/time";
+    import { dayKey, daysUntil } from "../lib/time";
     import TaskDetail from "./TaskDetail.svelte";
     import AiInbox from "./AiInbox.svelte";
     import { attachCurrentTask, pomodoro, timerState } from "../lib/timer";
@@ -61,7 +61,8 @@
             urgent,
             created: Date.now(),
             doneAt: 0,
-            due: "",
+            // 与上游快速新增一致：新任务默认归入今天。
+            due: dayKey(),
             start: "",
             repeat: "none",
             url: "",
@@ -138,10 +139,14 @@
     function dueText(t: Task): string {
         if (!t.due) return "";
         const n = daysUntil(t.due);
-        if (n < 0) return `逾期 ${-n} 天`;
+        if (n < 0) return `已逾期 ${-n} 天`;
         if (n === 0) return "今天到期";
         if (n === 1) return "明天到期";
-        return `${n} 天后到期`;
+        return `还剩 ${n} 天`;
+    }
+
+    function dueDateText(t: Task): string {
+        return t.due ? t.due.slice(5).replace("-", "/") : "";
     }
 
     function catColor(t: Task): string {
@@ -242,8 +247,8 @@
                             <span class="qc-meta">
                                 <span class="cat-dot" style="background:{catColor(t)}"></span>
                                 {#if t.due}
-                                    <span class="date-badge" class:overdue={daysUntil(t.due) < 0}>
-                                        📅 {t.due.slice(5)} · {dueText(t)}
+                                    <span class="date-badge" class:overdue={daysUntil(t.due) < 0} class:today={daysUntil(t.due) === 0}>
+                                        📅 {dueDateText(t)}（{dueText(t)}）
                                     </span>
                                 {/if}
                             </span>
@@ -436,5 +441,18 @@
     .date-badge.overdue {
         background: #fdecea;
         color: #b0543f;
+    }
+    .date-badge.today {
+        background: #fff0e6;
+        color: #a64424;
+        font-weight: 700;
+    }
+    .ty-root.dark .date-badge.overdue {
+        background: #3d2325;
+        color: #e57c58;
+    }
+    .ty-root.dark .date-badge.today {
+        background: #382723;
+        color: #e57c58;
     }
 </style>

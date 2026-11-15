@@ -102,7 +102,10 @@ export function hydrate(data: {
 }): void {
     if (Array.isArray(data.tasks)) {
         tasks.set(
-            data.tasks.map((t) => ({
+            data.tasks.map((t) => {
+                // 兼容上游字段 dueDate；本插件内部统一使用 due。
+                const raw = t as Task & { dueDate?: string };
+                return {
                 id: t.id || uid(),
                 title: t.title || "",
                 note: t.note || "",
@@ -111,7 +114,7 @@ export function hydrate(data: {
                 urgent: !!t.urgent,
                 created: t.created || Date.now(),
                 doneAt: t.doneAt || 0,
-                due: t.due || "",
+                due: t.due || raw.dueDate || "",
                 start: t.start || "",
                 repeat: t.repeat || "none",
                 url: t.url || "",
@@ -124,7 +127,8 @@ export function hydrate(data: {
                 isPinned: !!t.isPinned,
                 isEvening: !!t.isEvening,
                 description: typeof t.description === "string" ? t.description : ""
-            }))
+                };
+            })
         );
     }
     if (Array.isArray(data.stickies)) {
