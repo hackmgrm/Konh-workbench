@@ -27,6 +27,29 @@ export function fmtDateCN(d: Date): string {
     return `${d.getMonth() + 1} 月 ${d.getDate()} 日 · 星期${w}`;
 }
 
+/** 从任务文字中识别明确的中文日期或日期区间，仅用于展示，不作为截止提醒。 */
+export function extractDateMention(text: string): string {
+    const match = text.match(/(20\d{2})年(\d{1,2})月(\d{1,2})日(?:\s*(?:至|到|—|–|-)\s*(?:(20\d{2})年(\d{1,2})月)?(\d{1,2})日)?/);
+    if (!match) return "";
+
+    const [, startYear, startMonth, startDay, endYear, endMonth, endDay] = match;
+    const start = validDateParts(Number(startYear), Number(startMonth), Number(startDay));
+    if (!start) return "";
+    const startLabel = `${pad2(Number(startMonth))}/${pad2(Number(startDay))}`;
+    if (!endDay) return startLabel;
+
+    const rangeYear = endYear ? Number(endYear) : Number(startYear);
+    const rangeMonth = endMonth ? Number(endMonth) : Number(startMonth);
+    const end = validDateParts(rangeYear, rangeMonth, Number(endDay));
+    if (!end) return startLabel;
+    return `${startLabel}–${pad2(rangeMonth)}/${pad2(Number(endDay))}`;
+}
+
+function validDateParts(year: number, month: number, day: number): boolean {
+    const date = new Date(year, month - 1, day);
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+}
+
 /** 按重复规则推算下一次截止日期 */
 export function nextDue(due: string, rule: string): string {
     const base = due ? parseDayKey(due) : new Date();

@@ -3,7 +3,7 @@
     import { tasks, categories, save, uid } from "../lib/store";
     import { QUADRANTS, quadOf } from "../lib/types";
     import type { Task } from "../lib/types";
-    import { dayKey, daysUntil } from "../lib/time";
+    import { dayKey, daysUntil, extractDateMention } from "../lib/time";
     import TaskDetail from "./TaskDetail.svelte";
     import AiInbox from "./AiInbox.svelte";
     import { attachCurrentTask, pomodoro, timerState } from "../lib/timer";
@@ -146,7 +146,12 @@
     }
 
     function dueDateText(t: Task): string {
-        return t.due ? t.due.slice(5).replace("-", "/") : "";
+        if (t.due) return t.due.slice(5).replace("-", "/");
+        return extractDateMention([t.title, t.description || "", t.note || ""].join(" "));
+    }
+
+    function hasDateBadge(t: Task): boolean {
+        return !!t.due || !!dueDateText(t);
     }
 
     function catColor(t: Task): string {
@@ -246,9 +251,9 @@
                             {/if}
                             <span class="qc-meta">
                                 <span class="cat-dot" style="background:{catColor(t)}"></span>
-                                {#if t.due}
-                                    <span class="date-badge" class:overdue={daysUntil(t.due) < 0} class:today={daysUntil(t.due) === 0}>
-                                        📅 {dueDateText(t)}（{dueText(t)}）
+                                {#if hasDateBadge(t)}
+                                    <span class="date-badge" class:overdue={!!t.due && daysUntil(t.due) < 0} class:today={!!t.due && daysUntil(t.due) === 0}>
+                                        📅 {dueDateText(t)}{#if t.due}（{dueText(t)}）{/if}
                                     </span>
                                 {/if}
                             </span>
